@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLIL Teaching Principles Agreement Survey</title>
+    <style>
+        body {
+            font-family: 'Lato', Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d3b45;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2d3b45;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .statement-container {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .statement {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+        }
+        .option input {
+            margin-right: 8px;
+        }
+        .submit-btn {
+            background-color: #0374b5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 30px auto;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #025a8b;
+        }
+        .progress {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .completion-message {
+            text-align: center;
+            padding: 20px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        #hidden-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>CLIL Teaching Principles Agreement Survey</h1>
+    <div class="progress">Progress: <span id="progress-count">0</span>/18</div>
+    <div class="completion-message" id="completion-message">
+        Thank you for completing the survey! Your responses have been saved.
+    </div>
+    
+    <form id="survey-form">
+        <!-- Statements will be inserted here by JavaScript -->
+    </form>
+    
+    <button type="button" class="submit-btn" id="submit-btn">Submit Responses</button>
+    <div id="hidden-container"></div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/postscribe/2.0.8/postscribe.min.js"></script>
+    
+    <!-- Main Application Script -->
+    <script>
+        // Survey statements
+        const statements = [
+            "Language is best learned in context, through meaningful interactions rather than isolated lessons.",
+            "Language is a tool for learning, not just a subject to be taught.",
+            "Prioritizing communication skills is more important than perfect grammar.",
+            "In CLIL lessons, content comes before language.",
+            "Teaching English in CLIL settings promotes cultural understanding and appreciation.",
+            "Mastery of the subject matter (History, Geography, or the like) enhances language learning; content drives language use.",
+            "CLIL lessons should always integrate all four skills: listening, speaking, reading, and writing.",
+            "Teaching language in CLIL contexts encourages a mindset of lifelong learning.",
+            "Learners should have a voice in their learning process, fostering engagement and motivation.",
+            "Collaborative learning environments benefit language development and content mastery.",
+            "Language scaffolding is essential for students to access subject content successfully.",
+            "Teachers always need to prepare and/or adapt materials to suit the levels of learners.",
+            "Instruction must be tailored to meet diverse language proficiency levels and learning preferences.",
+            "The teacher's role shifts from knowledge provider to guide and facilitator of learning.",
+            "Regular reflection on teaching practices leads to continuous improvement.",
+            "Providing support at the right level helps learners bridge gaps in understanding and take steps towards their zone of proximal development.",
+            "Developing intercultural competence is as important as teaching content and language in CLIL.",
+            "Using real-world materials enhances relevance and stimulates language use."
+        ];
+
+        // DOM elements
+        const form = document.getElementById('survey-form');
+        const progressCount = document.getElementById('progress-count');
+        const completionMessage = document.getElementById('completion-message');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // Create survey questions
+        function createSurvey() {
+            statements.forEach((statement, index) => {
+                const container = document.createElement('div');
+                container.className = 'statement-container';
+                container.id = `statement-${index}`;
+                
+                const statementElement = document.createElement('div');
+                statementElement.className = 'statement';
+                statementElement.textContent = `${index + 1}. ${statement}`;
+                
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'options';
+                
+                const options = [
+                    { value: 'agree', label: 'I agree entirely' },
+                    { value: 'partially', label: 'I agree partially' },
+                    { value: 'disagree', label: 'I disagree' }
+                ];
+                
+                options.forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `statement-${index}`;
+                    input.id = `statement-${index}-${option.value}`;
+                    input.value = option.value;
+                    input.addEventListener('change', updateProgress);
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `statement-${index}-${option.value}`;
+                    label.textContent = option.label;
+                    
+                    optionDiv.appendChild(input);
+                    optionDiv.appendChild(label);
+                    optionsDiv.appendChild(optionDiv);
+                });
+                
+                container.appendChild(statementElement);
+                container.appendChild(optionsDiv);
+                form.appendChild(container);
+            });
+        }
+
+        // Update progress counter
+        function updateProgress() {
+            const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+            progressCount.textContent = answered;
+            
+            if (answered === statements.length) {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Submit grade back to Canvas
+        function submitGrade(score) {
+            const normalizedScore = Math.min(Math.max(score, 0), 1);
+            
+            postscribe('#hidden-container', `
+                <form id="grade_passback" 
+                      action="${window.lti?.launch_presentation_return_url || ''}" 
+                      method="POST">
+                    <input type="hidden" name="lti_message_type" value="basic-lti-launch-request">
+                    <input type="hidden" name="lti_version" value="LTI-1p0">
+                    <input type="hidden" name="resource_link_id" value="${window.lti?.resource_link_id || ''}">
+                    <input type="hidden" name="ext_outcome_data_values_accepted" value="text">
+                    <input type="hidden" name="lis_result_sourcedid" value="${window.lti?.lis_result_sourcedid || ''}">
+                    <input type="hidden" name="lis_outcome_service_url" value="${window.lti?.lis_outcome_service_url || ''}">
+                    <input type="hidden" name="custom_canvas_assignment_id" value="${window.lti?.custom_canvas_assignment_id || ''}">
+                    <input type="hidden" name="custom_canvas_user_id" value="${window.lti?.custom_canvas_user_id || ''}">
+                    <input type="hidden" name="custom_canvas_course_id" value="${window.lti?.custom_canvas_course_id || ''}">
+                    <input type="hidden" name="ext_outcome_result_total_score" value="${normalizedScore}">
+                </form>
+                <script>
+                    document.getElementById('grade_passback').submit();
+                <\/script>
+            `);
+        }
+
+        // Calculate score based on responses
+        function calculateScore(responses) {
+            const totalQuestions = responses.length;
+            const agreed = responses.filter(r => r.response === 'agree').length;
+            const partiallyAgreed = responses.filter(r => r.response === 'partially').length;
+            
+            return (agreed * 1 + partiallyAgreed * 0.5) / totalQuestions;
+        }
+
+        // Get LTI parameters from URL
+        function getLTIParameters() {
+            const params = {};
+            if (window.location.search) {
+                const searchParams = new URLSearchParams(window.location.search);
+                for (const [key, value] of searchParams) {
+                    params[key] = value;
+                }
+            }
+            return params;
+        }
+
+        // Handle form submission
+        submitBtn.addEventListener('click', () => {
+            const responses = [];
+            
+            statements.forEach((statement, index) => {
+                const selectedOption = document.querySelector(`input[name="statement-${index}"]:checked`);
+                if (selectedOption) {
+                    responses.push({
+                        statement: index + 1,
+                        response: selectedOption.value
+                    });
+                }
+            });
+            
+            if (responses.length === statements.length) {
+                const score = calculateScore(responses);
+                submitGrade(score);
+                
+                completionMessage.style.display = 'block';
+                form.style.display = 'none';
+                submitBtn.style.display = 'none';
+            } else {
+                alert('Please complete all statements before submitting.');
+            }
+        });
+
+        // Initialize the survey
+        function init() {
+            createSurvey();
+            submitBtn.disabled = true;
+            window.lti = getLTIParameters();
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
